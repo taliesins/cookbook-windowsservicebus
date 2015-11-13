@@ -12,13 +12,18 @@ if node['windowsservicebus']['service']['account'] == ""
     raise "Please configure Windows Service Bus service_account attribute is configured"
 end
 
+sql_server_connection_info = {
+  :host     => node['windowsservicebus']['database']['host'],
+  :port     => node['windowsservicebus']['database']['port'],
+  :username => node['windowsservicebus']['database']['username'],
+  :password => node['windowsservicebus']['database']['password']
+}
+
 sql_server_database_user node['windowsservicebus']['service']['account'] do
   connection(
-  	:host     => node['windowsservicebus']['database']['host'],
-  	:port     => node['windowsservicebus']['database']['port',
-  	:username => node['windowsservicebus']['database']['username'],
-  	:password => node['windowsservicebus']['database']['password']
+
   ) 
+
   sql_roles node['windowsservicebus']['database']['roles']
   windows_user true
   action :create
