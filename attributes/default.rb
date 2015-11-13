@@ -20,16 +20,15 @@
 default['windowsservicebus']['database']['roles'] = 'sysadmin'
 default['windowsservicebus']['database']['host'] = '127.0.0.1'
 default['windowsservicebus']['database']['port'] = node['sql_server']['port']
-default['windowsservicebus']['database']['username'] = 'sysadmin'
-default['windowsservicebus']['database']['password'] = node['sql_server']['server_sa_password']
+default['windowsservicebus']['database']['username'] = nil
+default['windowsservicebus']['database']['password'] = nil
 
 default['windowsservicebus']['service']['account'] = 'ServiceBus' # e.g. ServiceBus. This account is used to access the database server, so ensure that database permission have been configured. This account is used to run service, so ensure that it has the correct permissions on each node. If using multiple nodes, active directory is required.
 default['windowsservicebus']['service']['password'] = 'P@ssw0rd' # e.g. P@ssw0rd. This is the password to use if creating a windows account locally to use.
 default['windowsservicebus']['service']['group'] = 'Administrators'
+default['windowsservicebus']['service']['enablefirewalls'] = true
 
-default['windowsservicebus']['instance']
-
-default['windowsservicebus']['instance']['FarmDns'] = '' # e.g. servicebus.localtest.me
+default['windowsservicebus']['instance']['FarmDns'] = node['fqdn']  # e.g. servicebus.localtest.me
 default['windowsservicebus']['instance']['FarmCertificateThumbprint'] = '' # e.g. wildcard certificate *.localtest.me thumbprint
 default['windowsservicebus']['instance']['EncryptionCertificateThumbprint'] = '' # e.g. wildcard certificate *.localtest.me thumbprint
 

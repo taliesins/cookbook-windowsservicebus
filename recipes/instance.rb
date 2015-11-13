@@ -119,8 +119,14 @@ if ($SBNamespace) {
         Set-SBAuthorizationRule -NamespaceName $Namespace -Name $KeyName -PrimaryKey $PrimaryKey -SecondaryKey $SecondaryKey -Verbose 
     }
 } else {
-    New-SBNamespace -Name $Namespace -AddressingScheme 'Path' -ManageUsers $RunAsAccount -Verbose 
-    Set-SBAuthorizationRule -NamespaceName $Namespace -Name $KeyName -PrimaryKey $PrimaryKey -SecondaryKey $SecondaryKey -Verbose    
+    Try
+    {
+        New-SBNamespace -Name $Namespace -AddressingScheme 'Path' -ManageUsers $RunAsAccount -Verbose 
+        Set-SBAuthorizationRule -NamespaceName $Namespace -Name $KeyName -PrimaryKey $PrimaryKey -SecondaryKey $SecondaryKey -Verbose    
+    }
+    Catch [system.InvalidOperationException]
+    {
+    }
 }
         EOH
 	    action :run
