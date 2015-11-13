@@ -20,10 +20,7 @@ sql_server_connection_info = {
 }
 
 sql_server_database_user node['windowsservicebus']['service']['account'] do
-  connection(
-
-  ) 
-
+  connection sql_server_connection_info
   sql_roles node['windowsservicebus']['database']['roles']
   windows_user true
   action :create
