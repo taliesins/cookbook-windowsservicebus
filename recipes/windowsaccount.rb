@@ -17,11 +17,12 @@ if node['windowsservicebus']['service']['password'] == ""
 end
 
 user node['windowsservicebus']['service']['account']  do
-  password node['windowsservicebus']['service']['password']
+	action :create
+	password node['windowsservicebus']['service']['password']
 end
 
 group node['windowsservicebus']['service']['group'] do
-  action :modify
-  members node['windowsservicebus']['service']['account']
-  append true
+	action :modify
+	members node['windowsservicebus']['service']['account']
+	append true
 end

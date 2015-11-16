@@ -23,7 +23,7 @@ default['windowsservicebus']['database']['port'] = node['sql_server']['port']
 default['windowsservicebus']['database']['username'] = nil
 default['windowsservicebus']['database']['password'] = nil
 
-default['windowsservicebus']['service']['account'] = node['hostname'] + '\ServiceBus' # e.g. ServiceBus. This account is used to access the database server, so ensure that database permission have been configured. This account is used to run service, so ensure that it has the correct permissions on each node. If using multiple nodes, active directory is required.
+default['windowsservicebus']['service']['account'] = node['domain'] + '\ServiceBus' # e.g. ServiceBus. This account is used to access the database server, so ensure that database permission have been configured. This account is used to run service, so ensure that it has the correct permissions on each node. If using multiple nodes, active directory is required.
 default['windowsservicebus']['service']['password'] = 'P@ssw0rd' # e.g. P@ssw0rd. This is the password to use if creating a windows account locally to use.
 default['windowsservicebus']['service']['group'] = 'Administrators'
 default['windowsservicebus']['service']['enablefirewalls'] = true
