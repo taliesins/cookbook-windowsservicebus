@@ -33,7 +33,7 @@ if domain == ""  || domain == "."
 	domain = node["hostname"]
 end
 
-user domain + '\\' + username do
+user username do
 	action :create
 	password node['windowsservicebus']['service']['password']
 	only_if { domain == node["hostname"] }
