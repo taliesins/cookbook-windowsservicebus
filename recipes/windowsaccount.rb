@@ -17,22 +17,30 @@ if node['windowsservicebus']['service']['password'] == ""
 end
 
 username = node['windowsservicebus']['service']['account']
+domain = ""
 
 if username.include? '\\'
+	domain = username.split('\\')[0]
 	username = username.split('\\')[1]
 end
 
 if username.include? '@'
+	domain = username.split('@')[1]
 	username = username.split('@')[0]
 end
 
-user username do
+if domain == ""  || domain == "."
+	domain = node["hostname"]
+end
+
+user domain + '\\' + username do
 	action :create
 	password node['windowsservicebus']['service']['password']
+	only_if { domain == node["hostname"] }
 end
 
 group node['windowsservicebus']['service']['group'] do
 	action :modify
-	members node['windowsservicebus']['service']['account']
+	members domain + '\\' + username
 	append true
 end
