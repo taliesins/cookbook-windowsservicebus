@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-default['windowsservicebus']['database']['sys_roles'] = :sysadmin => :ADD
+default['windowsservicebus']['database']['sys_roles'] = {:sysadmin => :ADD}
 default['windowsservicebus']['database']['host'] = '127.0.0.1'
 default['windowsservicebus']['database']['port'] = node['sql_server']['port']
 default['windowsservicebus']['database']['username'] = nil
