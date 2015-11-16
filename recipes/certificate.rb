@@ -7,27 +7,52 @@
 # All rights reserved - Do Not Redistribute
 #
 
-certificate_path = File.join(Chef::Config[:file_cache_path], '/windowsservicebus/certificate.pfx') 
-certificate_password = nil
+if (node['windowsservicebus']['instance']['FarmCertificateThumbprint'] != '')
+	cert = ssl_certificate 'FarmCertificate' do
+		namespace node['windowsservicebus']['certificate']['FarmCertificate']
+	end
 
-ssl_certificate node['windowsservicebus']['instance']['FarmDns'] do
-	common_name node['windowsservicebus']['instance']['FarmDns']
-	source 'self-signed'
-	pkcs12_path certificate_path
-	pkcs12_passphrase certificate_password
-	not_if { ::File.file?(download_path) }
+	windows_certificate certificate_path do
+		source cert.pkcs12_path
+	    pfx_password cert.pkcs12_passphrase
+		private_key_acl default['windowsservicebus']['certificate']['FarmCertificate']['private_key_acl']
+	    store_name default['windowsservicebus']['certificate']['FarmCertificate']['store_name']
+	    user_store default['windowsservicebus']['certificate']['FarmCertificate']['user_store']
+	end
+
+	ruby_block 'load thumbprint for FarmCertificateThumbprint' do
+	  block do
+	    file_data = File.open(cert.pkcs12_path, 'rb') { |io| io.read }
+		cert_for_thumbprint = OpenSSL::PKCS12.new(file_data, cert.pkcs12_passphrase)
+		thumbprint = OpenSSL::Digest::SHA1.new(cert_for_thumbprint.to_der).to_s
+		
+		node.default['windowsservicebus']['instance']['FarmCertificateThumbprint'] = thumbprint # e.g. wildcard certificate *.localtest.me thumbprint		
+	  end
+	  action :run
+	end
 end
 
-ruby_block 'load thumbprint' do
-  block do
-    file_data = File.read(certificate_path)
-	cert = OpenSSL::X509::Certificate.new(file_data)
-	thumbprint = OpenSSL::Digest::SHA1.new(cert.to_der).to_s
+if (node['windowsservicebus']['instance']['EncryptionCertificateThumbprint'] != '')
+	cert = ssl_certificate 'EncryptionCertificate' do
+		namespace node['windowsservicebus']['certificate']['EncryptionCertificate']
+	end
 
-	Chef::Log.Info("thumbprint for certificate is: #{thumbprint}")
+	windows_certificate certificate_path do
+		source cert.pkcs12_path
+	    pfx_password cert.pkcs12_passphrase
+		private_key_acl default['windowsservicebus']['certificate']['EncryptionCertificate']['private_key_acl']
+	    store_name default['windowsservicebus']['certificate']['EncryptionCertificate']['store_name']
+	    user_store default['windowsservicebus']['certificate']['EncryptionCertificate']['user_store']
+	end
 
-	node['windowsservicebus']['instance']['FarmCertificateThumbprint'] = thumbprint # e.g. wildcard certificate *.localtest.me thumbprint
-	node['windowsservicebus']['instance']['EncryptionCertificateThumbprint'] = node['windowsservicebus']['instance']['FarmCertificateThumbprint'] # e.g. wildcard certificate *.localtest.me thumbprint
-  end
-  action :run
+	ruby_block 'load thumbprint for EncryptionCertificateThumbprint' do
+	  block do
+	    file_data = File.open(cert.pkcs12_path, 'rb') { |io| io.read }
+		cert_for_thumbprint = OpenSSL::PKCS12.new(file_data, cert.pkcs12_passphrase)
+		thumbprint = OpenSSL::Digest::SHA1.new(cert_for_thumbprint.to_der).to_s
+		
+		node.default['windowsservicebus']['instance']['EncryptionCertificateThumbprint'] = thumbprint # e.g. wildcard certificate *.localtest.me thumbprint		
+	  end
+	  action :run
+	end
 end
