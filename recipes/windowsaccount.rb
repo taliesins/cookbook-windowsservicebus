@@ -16,7 +16,17 @@ if node['windowsservicebus']['service']['password'] == ""
     raise "Please configure Windows Service Bus service_account_password attribute is configured"
 end
 
-user node['windowsservicebus']['service']['account']  do
+username = node['windowsservicebus']['service']['account']
+
+if username.include? '\\'
+	username = username.split('\\')[1]
+end
+
+if username.include? '@'
+	username = username.split('@')[0]
+end
+
+user username do
 	action :create
 	password node['windowsservicebus']['service']['password']
 end
