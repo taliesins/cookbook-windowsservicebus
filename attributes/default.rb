@@ -55,21 +55,36 @@ default['windowsservicebus']['instance']['FarmDns'] = node['fqdn']  # e.g. servi
 default['windowsservicebus']['instance']['FarmCertificateThumbprint'] = '' # if windowsservicebus::certificate is called it will populate this field e.g. wildcard certificate *.localtest.me thumbprint 
 default['windowsservicebus']['instance']['EncryptionCertificateThumbprint'] = '' # if windowsservicebus::certificate is called it will populate this field e.g. wildcard certificate *.localtest.me thumbprint
 
+default['windowsservicebus']['certificate']['CaCertificate']['common_name'] = node['windowsservicebus']['instance']['FarmDns'] + '.ca'
+default['windowsservicebus']['certificate']['CaCertificate']['key_source'] = 'self-signed'
+default['windowsservicebus']['certificate']['CaCertificate']['pkcs12_path'] = File.join(Chef::Config[:file_cache_path], node['windowsservicebus']['certificate']['CaCertificate']['common_name'] + '.pfx')
+default['windowsservicebus']['certificate']['CaCertificate']['pkcs12_passphrase'] = nil
+default['windowsservicebus']['certificate']['CaCertificate']['private_key_acl'] = ["#{domain}\\#{username}", "#{domain}\\vagrant"]
+default['windowsservicebus']['certificate']['CaCertificate']['store_name'] = "ROOT"
+default['windowsservicebus']['certificate']['CaCertificate']['user_store'] = false
+default['windowsservicebus']['certificate']['CaCertificate']['cert_path'] = File.join(Chef::Config[:file_cache_path], node['windowsservicebus']['certificate']['CaCertificate']['common_name'] + '.pem')
+default['windowsservicebus']['certificate']['CaCertificate']['key_path'] = File.join(Chef::Config[:file_cache_path], node['windowsservicebus']['certificate']['CaCertificate']['common_name'] + '.key')
+
 default['windowsservicebus']['certificate']['FarmCertificate']['common_name'] = node['windowsservicebus']['instance']['FarmDns']
-default['windowsservicebus']['certificate']['FarmCertificate']['source'] = 'self-signed'
-default['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_path'] = File.join(Chef::Config[:file_cache_path], node['windowsservicebus']['certificate']['FarmCertificate']['common_name'])
+default['windowsservicebus']['certificate']['FarmCertificate']['cert_source'] = 'with_ca'
+default['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_path'] = File.join(Chef::Config[:file_cache_path], node['windowsservicebus']['certificate']['FarmCertificate']['common_name'] + '.pfx')
 default['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_passphrase'] = nil
-default['windowsservicebus']['certificate']['FarmCertificate']['private_key_acl'] = ["#{domain}\\#{username}"]
-default['windowsservicebus']['certificate']['FarmCertificate']['store_name'] = :MY
+default['windowsservicebus']['certificate']['FarmCertificate']['private_key_acl'] = ["#{domain}\\#{username}", "#{domain}\\vagrant"]
+default['windowsservicebus']['certificate']['FarmCertificate']['store_name'] = "MY"
 default['windowsservicebus']['certificate']['FarmCertificate']['user_store'] = false
+default['windowsservicebus']['certificate']['FarmCertificate']['ca_cert_path'] = node['windowsservicebus']['certificate']['CaCertificate']['cert_path']
+default['windowsservicebus']['certificate']['FarmCertificate']['ca_key_path'] = node['windowsservicebus']['certificate']['CaCertificate']['key_path']
 
 default['windowsservicebus']['certificate']['EncryptionCertificate']['common_name'] = node['windowsservicebus']['instance']['FarmDns'] + '.encyption'
-default['windowsservicebus']['certificate']['EncryptionCertificate']['source'] = 'self-signed'
+default['windowsservicebus']['certificate']['EncryptionCertificate']['cert_source'] = 'with_ca'
 default['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_path'] = File.join(Chef::Config[:file_cache_path], node['windowsservicebus']['certificate']['EncryptionCertificate']['common_name'] + '.pfx')
 default['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_passphrase'] = nil
-default['windowsservicebus']['certificate']['EncryptionCertificate']['private_key_acl'] = ["#{domain}\\#{username}"]
-default['windowsservicebus']['certificate']['EncryptionCertificate']['store_name'] = :MY
+default['windowsservicebus']['certificate']['EncryptionCertificate']['private_key_acl'] = ["#{domain}\\#{username}", "#{domain}\\vagrant"]
+default['windowsservicebus']['certificate']['EncryptionCertificate']['store_name'] = "MY"
 default['windowsservicebus']['certificate']['EncryptionCertificate']['user_store'] = false
+default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_cert_path'] = node['windowsservicebus']['certificate']['CaCertificate']['cert_path']
+default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_key_path'] = node['windowsservicebus']['certificate']['CaCertificate']['key_path']
+
 
 dsn = "Data Source=#{default['windowsservicebus']['database']['host']};Integrated Security=True;Encrypt=False"
 default['windowsservicebus']['instance']['connectionstring']['SbManagementDB'] = "#{dsn};Initial Catalog=SbManagementDB"

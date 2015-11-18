@@ -7,6 +7,8 @@
 # All rights reserved - Do Not Redistribute
 #
 
+include_recipe "webpi::install-msi"
+
 registry_key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders' do
     values [{
         :name => "Local AppData",
@@ -16,10 +18,10 @@ registry_key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Expl
         action :create
 end
 
-#webpi_product 'ServiceBus_1_1' do
-#    accept_eula true
-#    action :install
-#end
+webpi_product 'ServiceBus_1_1' do
+    accept_eula true
+    action :install
+end
 
 webpi_product 'ServiceBus_1_1_CU1' do
     accept_eula true
