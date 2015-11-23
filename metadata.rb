@@ -7,7 +7,6 @@ long_description 'Installs/Configures windowsservicebus'
 
 version          '0.1.0'
 
-depends 'role-db'
 depends 'webpi'
 depends 'database'
 depends 'windows'
