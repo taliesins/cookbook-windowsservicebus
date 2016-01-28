@@ -86,7 +86,7 @@ default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_cert_pa
 default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_key_path'] = node['windowsservicebus']['certificate']['CaCertificate']['key_path']
 
 
-dsn = "Data Source=#{default['windowsservicebus']['database']['host']};Integrated Security=True;Encrypt=False"
+dsn = "Data Source=#{node['windowsservicebus']['database']['host']};Integrated Security=True;Encrypt=False"
 default['windowsservicebus']['instance']['connectionstring']['SbManagementDB'] = "#{dsn};Initial Catalog=SbManagementDB"
 default['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase'] = "#{dsn};Initial Catalog=SbGatewayDatabase"
 
