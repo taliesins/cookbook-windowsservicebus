@@ -44,7 +44,7 @@ default['windowsservicebus']['service']['enablefirewalls'] = true
 
 default['windowsservicebus']['database']['sys_roles'] = {:sysadmin => :ADD}
 default['windowsservicebus']['database']['host'] = '127.0.0.1'
-default['windowsservicebus']['database']['port'] = node['sql_server']['port']
+default['windowsservicebus']['database']['port'] = (node.attribute?('sql_server') && node['sql_server'].attribute?('port')) ? node['sql_server']['port'] : '1433'
 default['windowsservicebus']['database']['username'] = nil
 default['windowsservicebus']['database']['password'] = nil
 
