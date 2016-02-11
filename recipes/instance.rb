@@ -62,8 +62,12 @@ if ($sbFarm){
     if ($localRunAsAccount -ne $RunAsAccount -or $sbFarm.SBFarmDBConnectionString -ne $SBFarmDBConnectionString -or $sbFarm.GatewayDBConnectionString -ne $GatewayDBConnectionString -or $sbFarm.FarmDNS -ne $FarmDns) {
         Stop-SBFarm
         Set-SBFarm -RunAsAccount $RunAsAccount -SBFarmDBConnectionString $SBFarmDBConnectionString -FarmDns $FarmDns
-        Update-SBHost
-        Start-SBFarm
+        try {
+            Update-SBHost -RunAsPassword $RunAsPassword
+            Start-SBFarm
+        } catch {
+            Add-SBHost -SBFarmDBConnectionString $SBFarmDBConnectionString -RunAsPassword $RunAsPassword -EnableFirewallRules $true
+        }
     }
 } else {
     New-SBFarm -SBFarmDBConnectionString $SBFarmDBConnectionString -GatewayDBConnectionString $GatewayDBConnectionString -MessageContainerDBConnectionString $MessageContainerDBConnectionString -RunAsAccount $RunAsAccount -FarmDns $FarmDns -FarmCertificateThumbprint $FarmCertificateThumbprint -EncryptionCertificateThumbprint $EncryptionCertificateThumbprint
