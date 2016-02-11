@@ -28,6 +28,13 @@ webpi_product 'ServiceBus_1_1_CU1' do
     action :install
 end
 
+windows_package 'Update for Microsoft Service Bus 1.1 [See KB article 3086798 for details]' do
+    checksum node['windowsservicebus']['KB3086798']['checksum']
+    source node['windowsservicebus']['KB3086798']['url']
+    installer_type :custom
+    options "/s /w /norestart"
+end
+
 registry_key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders' do
     values [{
         :name => "Local AppData",
