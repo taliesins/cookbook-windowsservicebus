@@ -30,9 +30,10 @@ end
 
 windows_package 'Update for Service Bus 1.1 (KB3086798)GDR' do
     checksum node['windowsservicebus']['KB3086798']['checksum']
+    options '/quiet /w /norestart'
     source node['windowsservicebus']['KB3086798']['url']
+    action :install
     installer_type :custom
-    options "/quiet /w /norestart"
 end
 
 registry_key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders' do
