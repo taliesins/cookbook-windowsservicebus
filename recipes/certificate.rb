@@ -7,7 +7,7 @@
 # All rights reserved - Do Not Redistribute
 #
 
-ca_cert = ssl_certificate node['windowsservicebus']['certificate']['CaCertificate']['common_name'] do
+ssl_certificate node['windowsservicebus']['certificate']['CaCertificate']['common_name'] do
 	common_name node['windowsservicebus']['certificate']['CaCertificate']['common_name']
 	cert_source node['windowsservicebus']['certificate']['CaCertificate']['cert_source']
 	key_source node['windowsservicebus']['certificate']['CaCertificate']['key_source']
