@@ -27,7 +27,7 @@ $GatewayDBConnectionString = "#{node['windowsservicebus']['instance']['connectio
 $MessageContainerDBConnectionString = "#{node['windowsservicebus']['instance']['SBMessageContainers'][0]['ConnectionString']}"
 $FarmDns = "#{node['windowsservicebus']['instance']['FarmDns']}"
 
-$FarmCertificateThumbprint = "#{node['windowsservicebus']['instance']['FarmCertificateThumbprint']}" -replace '?'
+$FarmCertificateThumbprint = "#{node['windowsservicebus']['instance']['FarmCertificateThumbprint']}"
 $FarmCertificatePath = "#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_path']}"
 $FarmCertificatePassword = "#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_passphrase']}"
 
@@ -37,7 +37,7 @@ if (!$FarmCertificateThumbprint) {
     $FarmCertificateThumbprint = $cert.Thumbprint.ToLower()
 }
 
-$EncryptionCertificateThumbprint = "#{node['windowsservicebus']['instance']['EncryptionCertificateThumbprint']}" -replace '?'
+$EncryptionCertificateThumbprint = "#{node['windowsservicebus']['instance']['EncryptionCertificateThumbprint']}"
 $EncryptionCertificatePath = "#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_path']}"
 $EncryptionCertificatePassword = "#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_passphrase']}"
 
