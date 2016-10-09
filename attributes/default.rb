@@ -85,9 +85,6 @@ default['windowsservicebus']['certificate']['EncryptionCertificate']['user_store
 default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_cert_path'] = node['windowsservicebus']['certificate']['CaCertificate']['cert_path']
 default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_key_path'] = node['windowsservicebus']['certificate']['CaCertificate']['key_path']
 
-default['windowsservicebus']['KB3086798']['url'] = 'https://download.microsoft.com/download/F/7/C/F7C0E11E-1210-41B1-8C7A-3E084ADF2053/AppServer-KB3086798-x64-EN.exe'
-default['windowsservicebus']['KB3086798']['checksum'] = 'cc0da26df24289fdb8bd19d60081e34b4f855b47e1751ffbec06318a74f7ac3b'
-
 dsn = "Data Source=#{node['windowsservicebus']['database']['host']};Integrated Security=True;Encrypt=False"
 default['windowsservicebus']['instance']['connectionstring']['SbManagementDB'] = "#{dsn};Initial Catalog=SbManagementDB"
 default['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase'] = "#{dsn};Initial Catalog=SbGatewayDatabase"
