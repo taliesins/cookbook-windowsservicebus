@@ -18,6 +18,11 @@ registry_key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Expl
         action :create
 end
 
+webpi_product 'WindowsFabric' do
+    accept_eula true
+    action :install
+end
+
 webpi_product 'ServiceBus_1_1,ServiceBus_1_1_CU1,ServiceBus_1_1_NETFramework46_Update' do
     accept_eula true
     action :install
