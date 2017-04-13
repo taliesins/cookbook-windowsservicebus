@@ -8,6 +8,5 @@ long_description 'Installs/Configures windowsservicebus'
 version          '0.1.0'
 
 depends 'webpi'
-depends 'database'
 depends 'windows'
 depends 'ssl_certificate'
