@@ -19,10 +19,10 @@ sql_server_connection_info = {
 }
 
 # database cookbook made it sql_server cookbook problem. sql_server cookbook as made it the callers problem now
-# Need to limit to 1.2.0 to work in ChefDK https://github.com/rails-sqlserver/tiny_tds/issues/354
+# Need to limit to 1.0.5 to work in ChefDK https://github.com/rails-sqlserver/tiny_tds/issues/354
 chef_gem 'tiny_tds' do
     action :install
-    version '1.2.0'
+    version '1.0.5'
     options '--no-user-install'
 end
 
