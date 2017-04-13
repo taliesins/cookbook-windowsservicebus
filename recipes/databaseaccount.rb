@@ -22,7 +22,7 @@ sql_server_connection_info = {
 # Need to limit to 1.2.0 to work in ChefDK https://github.com/rails-sqlserver/tiny_tds/issues/354
 chef_gem 'tiny_tds' do
     action :install
-    version: '1.2.0'
+    version '1.2.0'
 end
 
 sql_server_database_user node['windowsservicebus']['database']['account'] do
