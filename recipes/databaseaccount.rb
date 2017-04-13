@@ -183,6 +183,63 @@ function Invoke-SafeSqlcmd($ServerInstance, $Username, $Password, $Query) {
     }
 }
 
+function Add-SqlUserWithRoles($Hostname, $Username, $Password, $Account, $Roles){
+    $SqlResult = $null
+
+    try {
+        $sql = "select * from sys.server_principals where name='$Account'" 
+        $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
+    }
+    catch { 
+        throw "Unable to add user account to SQL Server due to exception: $($_.Exception)" 
+    }
+
+    if (!$SqlResult){
+        #Create account as it does not exist
+        try {
+            $sql = "CREATE LOGIN [$Account] FROM WINDOWS;" 
+            $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
+        }
+        catch { 
+            throw "Unable to add user account to SQL Server due to exception: $($_.Exception)" 
+        }
+    }
+
+    $Roles | %{
+        $Role = $_
+
+        try {
+            $sql = @"
+SELECT sys.server_role_members.role_principal_id, role.name AS RoleName,   
+    sys.server_role_members.member_principal_id, member.name AS MemberName  
+FROM sys.server_role_members  
+JOIN sys.server_principals AS role  
+    ON sys.server_role_members.role_principal_id = role.principal_id  
+JOIN sys.server_principals AS member  
+    ON sys.server_role_members.member_principal_id = member.principal_id
+WHERE
+    role.Name='$Role' AND member.name = '$Account';
+"@        
+
+            $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
+        }
+        catch { 
+            throw "Unable to get server role for user account due to exception: $($_.Exception)" 
+        }
+
+        if (!$SqlResult){
+            #Create account as it does not exist
+            try {
+                $sql = "EXEC master..sp_addsrvrolemember @loginame = N'$Account', @rolename = N'$Role';"
+                $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
+            }
+            catch { 
+                throw "Unable to add user account to server role to SQL Role due to exception: $($_.Exception)" 
+            }
+        }
+    }
+}
+
 $Hostname = '#{node['windowsservicebus']['database']['host']}'
 $Username = '#{node['windowsservicebus']['database']['username']}'
 $Password = '#{node['windowsservicebus']['database']['password']}'
@@ -213,60 +270,7 @@ if (!$Username){
     $Password = $null
 }
 
-$SqlResult = $null
-
-try {
-    $sql = "select * from sys.server_principals where name='$Account'" 
-    $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
-}
-catch { 
-    throw "Unable to add user account to SQL Server due to exception: $($_.Exception)" 
-}
-
-if (!$SqlResult){
-    #Create account as it does not exist
-    try {
-        $sql = "CREATE LOGIN [$Account] FROM WINDOWS;" 
-        $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
-    }
-    catch { 
-        throw "Unable to add user account to SQL Server due to exception: $($_.Exception)" 
-    }
-}
-
-$Roles | %{
-    $Role = $_
-
-    try {
-        $sql = @"
-SELECT sys.server_role_members.role_principal_id, role.name AS RoleName,   
-    sys.server_role_members.member_principal_id, member.name AS MemberName  
-FROM sys.server_role_members  
-JOIN sys.server_principals AS role  
-    ON sys.server_role_members.role_principal_id = role.principal_id  
-JOIN sys.server_principals AS member  
-    ON sys.server_role_members.member_principal_id = member.principal_id
-WHERE
-    role.Name='$Role' AND member.name = '$Account';
-"@        
-
-        $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
-    }
-    catch { 
-        throw "Unable to get server role for user account due to exception: $($_.Exception)" 
-    }
-
-    if (!$SqlResult){
-        #Create account as it does not exist
-        try {
-            $sql = "EXEC master..sp_addsrvrolemember @loginame = N'$Account', @rolename = N'$Role';"
-            $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
-        }
-        catch { 
-            throw "Unable to add user account to server role to SQL Role due to exception: $($_.Exception)" 
-        }
-    }
-}
+Add-SqlUserWithRoles -Hostname $Hostname -Username $Username -Password $Password -Account $Account -Roles $Roles
   EOH
   guard_interpreter :powershell_script
   only_if <<-EOH
@@ -439,6 +443,53 @@ function Invoke-SafeSqlcmd($ServerInstance, $Username, $Password, $Query) {
     }
 }
 
+function Test-SqlUserWithRoles($Hostname, $Username, $Password, $Account, $Roles){
+    $result = 'false'
+    $SqlResult = $null
+
+    try {
+        $sql = "select * from sys.server_principals where name='$Account'" 
+        $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
+    }
+    catch { 
+        throw "Unable to add user account to SQL Server due to exception: $($_.Exception)" 
+    }
+
+    if (!$SqlResult){
+        $result='true'
+    } else {
+        $Roles | %{
+            $Role = $_
+
+            try {
+            $sql = @"
+SELECT sys.server_role_members.role_principal_id, role.name AS RoleName,   
+    sys.server_role_members.member_principal_id, member.name AS MemberName  
+FROM sys.server_role_members  
+JOIN sys.server_principals AS role  
+    ON sys.server_role_members.role_principal_id = role.principal_id  
+JOIN sys.server_principals AS member  
+    ON sys.server_role_members.member_principal_id = member.principal_id
+WHERE
+    role.Name='$Role' AND member.name = '$Account';
+"@        
+
+                $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
+            }
+            catch { 
+                throw "Unable to get server role for user account due to exception: $($_.Exception)" 
+            }
+
+            if (!$SqlResult){
+                $result='true'
+                return
+            }
+        }
+    }  
+
+    return $result -eq 'true'
+}
+
 $Hostname = '#{node['windowsservicebus']['database']['host']}'
 $Username = '#{node['windowsservicebus']['database']['username']}'
 $Password = '#{node['windowsservicebus']['database']['password']}'
@@ -469,47 +520,6 @@ if (!$Username){
     $Password = $null
 }
 
-$SqlResult = $null
-
-try {
-    $sql = "select * from sys.server_principals where name='$Account'" 
-    $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
-}
-catch { 
-    throw "Unable to add user account to SQL Server due to exception: $($_.Exception)" 
-}
-
-if (!$SqlResult){
-    return $true
-}
-
-$Roles | %{
-    $Role = $_
-
-    try {
-        $sql = @"
-SELECT sys.server_role_members.role_principal_id, role.name AS RoleName,   
-    sys.server_role_members.member_principal_id, member.name AS MemberName  
-FROM sys.server_role_members  
-JOIN sys.server_principals AS role  
-    ON sys.server_role_members.role_principal_id = role.principal_id  
-JOIN sys.server_principals AS member  
-    ON sys.server_role_members.member_principal_id = member.principal_id
-WHERE
-    role.Name='$Role' AND member.name = '$Account';
-"@        
-
-        $SqlResult = Invoke-SafeSqlcmd -ServerInstance $Hostname -Username $Username -Password $Password -Query $sql
-    }
-    catch { 
-        throw "Unable to get server role for user account due to exception: $($_.Exception)" 
-    }
-
-    if (!$SqlResult){
-        return $true
-    }
-}  
-
-return $false
+Test-SqlUserWithRoles -Hostname $Hostname -Username $Username -Password $Password -Account $Account -Roles $Roles
   EOH
 end
