@@ -18,6 +18,13 @@ sql_server_connection_info = {
   :password => node['windowsservicebus']['database']['password']
 }
 
+# database cookbook made it sql_server cookbook problem. sql_server cookbook as made it the callers problem now
+# Need to limit to 1.2.0 to work in ChefDK https://github.com/rails-sqlserver/tiny_tds/issues/354
+chef_gem 'tiny_tds' do
+    action :install
+    version: '1.2.0'
+end
+
 sql_server_database_user node['windowsservicebus']['database']['account'] do
   connection sql_server_connection_info
   sql_sys_roles node['windowsservicebus']['database']['sys_roles']
