@@ -9,7 +9,8 @@
 
 include_recipe "webpi::install-msi"
 
-registry_key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders' do
+registry_key 'Use relative directory for Local AppData' do
+    key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
     values [{
         :name => "Local AppData",
         :type => :expand_string,
@@ -23,7 +24,8 @@ webpi_product 'ServiceBus_1_1,ServiceBus_1_1_CU1,ServiceBus_1_1_NETFramework46_U
     action :install
 end
 
-registry_key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders' do
+registry_key 'Use profile\AppData\Local for Local AppData' do
+    key 'HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
     values [{
         :name => "Local AppData",
         :type => :expand_string,
