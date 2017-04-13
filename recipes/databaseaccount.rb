@@ -23,6 +23,7 @@ sql_server_connection_info = {
 chef_gem 'tiny_tds' do
     action :install
     version '1.2.0'
+    options '--no-user-install'
 end
 
 sql_server_database_user node['windowsservicebus']['database']['account'] do
