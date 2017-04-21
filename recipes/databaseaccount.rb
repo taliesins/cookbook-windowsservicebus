@@ -273,7 +273,7 @@ if (!$Username){
 Add-SqlUserWithRoles -Hostname $Hostname -Username $Username -Password $Password -Account $Account -Roles $Roles
   EOH
   guard_interpreter :powershell_script
-  only_if <<-EOH
+  not_if <<-EOH
 $ErrorActionPreference = "Stop"
 
 Function Get-SQLInstance {  
