@@ -244,7 +244,7 @@ $Hostname = '#{node['windowsservicebus']['database']['host']}'
 $Username = '#{node['windowsservicebus']['database']['username']}'
 $Password = '#{node['windowsservicebus']['database']['password']}'
 $Account = '#{node['windowsservicebus']['database']['account']}''
-$Roles = @(#{node['windowsservicebus']['database']['sys_roles'].map{ |i| "'" + i[0].to_s + "'" if i[1].upcase = "'ADD'" or i[1] = nil }.compact.join(",")
+$Roles = @(#{node['windowsservicebus']['database']['sys_roles'].map{ |i| "'" + i[0].to_s + "'" if i[1].upcase = "'ADD'" or i[1] = nil }.compact.join(",")})
 
 $MicrosoftSqlPath = Join-Path ${env:ProgramFiles(x86)} 'Microsoft SQL Server'
 
@@ -494,7 +494,7 @@ $Hostname = '#{node['windowsservicebus']['database']['host']}'
 $Username = '#{node['windowsservicebus']['database']['username']}'
 $Password = '#{node['windowsservicebus']['database']['password']}'
 $Account = '#{node['windowsservicebus']['database']['account']}''
-$Roles = @(#{node['windowsservicebus']['database']['sys_roles'].map{ |i| "'" + i[0].to_s + "'" if i[1].upcase = "'ADD'" or i[1] = nil }.compact.join(",")
+$Roles = @(#{node['windowsservicebus']['database']['sys_roles'].map{ |i| "'" + i[0].to_s + "'" if i[1].upcase = "'ADD'" or i[1] = nil }.compact.join(",")})
 
 $MicrosoftSqlPath = Join-Path ${env:ProgramFiles(x86)} 'Microsoft SQL Server'
 
