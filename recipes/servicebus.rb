@@ -29,6 +29,6 @@ registry_key 'Use profile\AppData\Local for Local AppData' do
     values [{
         :name => "Local AppData",
         :type => :expand_string,
-        :data => '%%USERPROFILE%%\AppData\Local'
+        :data => '%USERPROFILE%\AppData\Local'
         }]
 end
