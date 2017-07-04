@@ -22,7 +22,7 @@ $ErrorActionPreference="Stop"
 ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
 $RunAsAccount = '#{node['windowsservicebus']['service']['account']}'
 $RunAsPassword = convertto-securestring '#{node['windowsservicebus']['service']['password']}' -asplaintext -force
-$EnableFirewallRules = $#{node['windowsservicebus']['service']['enablefirewalls']
+$EnableFirewallRules = $#{node['windowsservicebus']['service']['enablefirewalls']}
 $SBFarmDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}'
 $GatewayDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase']}'
 $FarmDns = '#{node['windowsservicebus']['instance']['FarmDns']}'
