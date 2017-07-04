@@ -19,13 +19,13 @@ powershell_script 'Add-SBHost' do
     guard_interpreter :powershell_script
     code <<-EOH
 $ErrorActionPreference="Stop"   
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
-$RunAsAccount = "#{node['windowsservicebus']['service']['account']}"
-$RunAsPassword = convertto-securestring "#{node['windowsservicebus']['service']['password']}" -asplaintext -force
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
+$RunAsAccount = '#{node['windowsservicebus']['service']['account']}'
+$RunAsPassword = convertto-securestring '#{node['windowsservicebus']['service']['password']}' -asplaintext -force
 $EnableFirewallRules = $#{node['windowsservicebus']['service']['enablefirewalls']
-$SBFarmDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}"
-$GatewayDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase']}"
-$FarmDns = "#{node['windowsservicebus']['instance']['FarmDns']}"
+$SBFarmDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}'
+$GatewayDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase']}'
+$FarmDns = '#{node['windowsservicebus']['instance']['FarmDns']}'
 
 $hostName = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName
 try{$sbFarm = get-sbfarm}catch{$sbFarm = $null}
@@ -51,8 +51,8 @@ if ($sbFarm){
     EOH
     action :run
     not_if <<-EOH
-$ErrorActionPreference="Stop"   
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
+$ErrorActionPreference='Stop'
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
 $hostName = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName
 try{$sbFarm = get-sbfarm}catch{$sbFarm = $null}
 

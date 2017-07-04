@@ -18,18 +18,18 @@ end
 powershell_script 'New-SBFarm' do
     guard_interpreter :powershell_script
     code <<-EOH1    
-$ErrorActionPreference="Stop"   
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
-$RunAsAccount = "#{node['windowsservicebus']['service']['account']}"
-$RunAsPassword = convertto-securestring "#{node['windowsservicebus']['service']['password']}" -asplaintext -force
-$SBFarmDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}"
-$GatewayDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase']}"
-$MessageContainerDBConnectionString = "#{node['windowsservicebus']['instance']['SBMessageContainers'][0]['ConnectionString']}"
-$FarmDns = "#{node['windowsservicebus']['instance']['FarmDns']}"
+$ErrorActionPreference='Stop'
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
+$RunAsAccount = '#{node['windowsservicebus']['service']['account']}'
+$RunAsPassword = convertto-securestring '#{node['windowsservicebus']['service']['password']}' -asplaintext -force
+$SBFarmDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}'
+$GatewayDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase']}'
+$MessageContainerDBConnectionString = '#{node['windowsservicebus']['instance']['SBMessageContainers'][0]['ConnectionString']}'
+$FarmDns = '#{node['windowsservicebus']['instance']['FarmDns']}'
 
-$FarmCertificateThumbprint = "#{node['windowsservicebus']['instance']['FarmCertificateThumbprint']}"
-$FarmCertificatePath = "#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_path']}"
-$FarmCertificatePassword = "#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_passphrase']}"
+$FarmCertificateThumbprint = '#{node['windowsservicebus']['instance']['FarmCertificateThumbprint']}'
+$FarmCertificatePath = '#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_path']}'
+$FarmCertificatePassword = '#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_passphrase']}'
 
 if (!$FarmCertificateThumbprint) {
     $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
@@ -37,9 +37,9 @@ if (!$FarmCertificateThumbprint) {
     $FarmCertificateThumbprint = $cert.Thumbprint.ToLower()
 }
 
-$EncryptionCertificateThumbprint = "#{node['windowsservicebus']['instance']['EncryptionCertificateThumbprint']}"
-$EncryptionCertificatePath = "#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_path']}"
-$EncryptionCertificatePassword = "#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_passphrase']}"
+$EncryptionCertificateThumbprint = '#{node['windowsservicebus']['instance']['EncryptionCertificateThumbprint']}'
+$EncryptionCertificatePath = '#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_path']}'
+$EncryptionCertificatePassword = '#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_passphrase']}'
 
 if (!$EncryptionCertificateThumbprint) {
     $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
@@ -77,17 +77,17 @@ if ($sbFarm){
 EOH1
     
     only_if <<-EOH2
-$ErrorActionPreference="Stop"   
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
-$RunAsAccount = "#{node['windowsservicebus']['service']['account']}"
-$SBFarmDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}"
-$GatewayDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase']}"
-$MessageContainerDBConnectionString = "#{node['windowsservicebus']['instance']['SBMessageContainers'][0]['ConnectionString']}"
-$FarmDns = "#{node['windowsservicebus']['instance']['FarmDns']}"
+$ErrorActionPreference='Stop'
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
+$RunAsAccount = '#{node['windowsservicebus']['service']['account']}'
+$SBFarmDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}'
+$GatewayDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase']}'
+$MessageContainerDBConnectionString = '#{node['windowsservicebus']['instance']['SBMessageContainers'][0]['ConnectionString']}'
+$FarmDns = '#{node['windowsservicebus']['instance']['FarmDns']}'
 
-$FarmCertificateThumbprint = "#{node['windowsservicebus']['instance']['FarmCertificateThumbprint']}"
-$FarmCertificatePath = "#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_path']}"
-$FarmCertificatePassword = "#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_passphrase']}"
+$FarmCertificateThumbprint = '#{node['windowsservicebus']['instance']['FarmCertificateThumbprint']}'
+$FarmCertificatePath = '#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_path']}'
+$FarmCertificatePassword = '#{node['windowsservicebus']['certificate']['FarmCertificate']['pkcs12_passphrase']}'
 
 if (!$FarmCertificateThumbprint) {
     $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
@@ -95,9 +95,9 @@ if (!$FarmCertificateThumbprint) {
     $FarmCertificateThumbprint = $cert.Thumbprint.ToLower()
 }
 
-$EncryptionCertificateThumbprint = "#{node['windowsservicebus']['instance']['EncryptionCertificateThumbprint']}"
-$EncryptionCertificatePath = "#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_path']}"
-$EncryptionCertificatePassword = "#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_passphrase']}"
+$EncryptionCertificateThumbprint = '#{node['windowsservicebus']['instance']['EncryptionCertificateThumbprint']}'
+$EncryptionCertificatePath = '#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_path']}'
+$EncryptionCertificatePassword = '#{node['windowsservicebus']['certificate']['EncryptionCertificate']['pkcs12_passphrase']}'
 
 if (!$EncryptionCertificateThumbprint) {
     $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
@@ -126,11 +126,11 @@ node['windowsservicebus']['instance']['SBMessageContainers'].each do |service_bu
     powershell_script "New-SBMessageContainer #{service_bus_message_container['DatabaseName']}" do
         guard_interpreter :powershell_script
         code <<-EOH3
-$ErrorActionPreference="Stop"       
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
-$DatabaseName = "#{service_bus_message_container['DatabaseName']}"
-$ContainerDBConnectionString = "#{service_bus_message_container['ConnectionString']}"
-$SBFarmDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}"
+$ErrorActionPreference='Stop'
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
+$DatabaseName = '#{service_bus_message_container['DatabaseName']}'
+$ContainerDBConnectionString = '#{service_bus_message_container['ConnectionString']}'
+$SBFarmDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}'
 
 $SBMessageContainer = Get-SBMessageContainer | ?{$_.DatabaseName -eq $DatabaseName}
 
@@ -140,11 +140,11 @@ if (!$SBMessageContainer) {
 EOH3
         action :run
         only_if <<-EOH4
-$ErrorActionPreference="Stop"   
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
-$DatabaseName = "#{service_bus_message_container['DatabaseName']}"
-$ContainerDBConnectionString = "#{service_bus_message_container['ConnectionString']}"
-$SBFarmDBConnectionString = "#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}"
+$ErrorActionPreference='Stop'
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
+$DatabaseName = '#{service_bus_message_container['DatabaseName']}'
+$ContainerDBConnectionString = '#{service_bus_message_container['ConnectionString']}'
+$SBFarmDBConnectionString = '#{node['windowsservicebus']['instance']['connectionstring']['SbManagementDB']}'
 
 $SBMessageContainer = Get-SBMessageContainer | ?{$_.DatabaseName -eq $DatabaseName}
 
@@ -160,13 +160,13 @@ node['windowsservicebus']['instance']['ServiceBusNamespaces'].each do |service_b
     powershell_script "New-SBNamespace #{service_bus_namespace['Namespace']}" do
         guard_interpreter :powershell_script
         code <<-EOH5
-$ErrorActionPreference="Stop"   
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
-$RunAsAccount = "#{node['windowsservicebus']['service']['account']}"
-$Namespace = "#{service_bus_namespace['Namespace']}"
-$PrimaryKey = "#{service_bus_namespace['PrimaryKey']}"
-$SecondaryKey = "#{service_bus_namespace['SecondaryKey']}"
-$KeyName = "RootManageSharedAccessKey"
+$ErrorActionPreference='Stop'
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
+$RunAsAccount = '#{node['windowsservicebus']['service']['account']}'
+$Namespace = '#{service_bus_namespace['Namespace']}'
+$PrimaryKey = '#{service_bus_namespace['PrimaryKey']}'
+$SecondaryKey = '#{service_bus_namespace['SecondaryKey']}'
+$KeyName = 'RootManageSharedAccessKey'
 
 $SBNamespace = Get-SBNamespace | ?{$_.Name -eq $Namespace}
 if ($SBNamespace) {
@@ -195,12 +195,12 @@ if ($SBNamespace) {
 EOH5
         action :run
         only_if <<-EOH6
-$ErrorActionPreference="Stop"   
-ipmo "C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll"
-$Namespace = "#{service_bus_namespace['Namespace']}"
-$PrimaryKey = "#{service_bus_namespace['PrimaryKey']}"
-$SecondaryKey = "#{service_bus_namespace['SecondaryKey']}"
-$KeyName = "RootManageSharedAccessKey"
+$ErrorActionPreference='Stop'
+ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
+$Namespace = '#{service_bus_namespace['Namespace']}'
+$PrimaryKey = '#{service_bus_namespace['PrimaryKey']}'
+$SecondaryKey = '#{service_bus_namespace['SecondaryKey']}'
+$KeyName = 'RootManageSharedAccessKey'
 
 $SBNamespace = Get-SBNamespace | ?{$_.Name -eq $Namespace}
 if ($SBNamespace) {
