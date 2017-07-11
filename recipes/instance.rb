@@ -19,6 +19,9 @@ powershell_script 'New-SBFarm' do
     guard_interpreter :powershell_script
     code <<-EOH1    
 $ErrorActionPreference='Stop'
+
+$command = @'
+$ErrorActionPreference='Stop'
 ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
 $RunAsAccount = '#{node['windowsservicebus']['service']['account']}'
 $RunAsPassword = convertto-securestring '#{node['windowsservicebus']['service']['password']}' -asplaintext -force
@@ -56,7 +59,7 @@ if ($sbFarm){
         Add-SBHost -SBFarmDBConnectionString $SBFarmDBConnectionString -RunAsPassword $RunAsPassword -EnableFirewallRules $true
     }
     $localRunAsAccount = $sbFarm.RunAsAccount 
-    $localRunAsAccount = $localRunAsAccount -replace "#{'^\.\\\\'}", ""
+    $localRunAsAccount = $localRunAsAccount -replace "#{'^\\.\\\\'}", ""
     $localRunAsAccount = $localRunAsAccount -replace "#{'^$env:COMPUTERNAME\\\\'}", ""
     
     if ($localRunAsAccount -ne $RunAsAccount -or $sbFarm.SBFarmDBConnectionString -ne $SBFarmDBConnectionString -or $sbFarm.GatewayDBConnectionString -ne $GatewayDBConnectionString -or $sbFarm.FarmDNS -ne $FarmDns) {
@@ -73,7 +76,156 @@ if ($sbFarm){
     New-SBFarm -SBFarmDBConnectionString $SBFarmDBConnectionString -GatewayDBConnectionString $GatewayDBConnectionString -MessageContainerDBConnectionString $MessageContainerDBConnectionString -RunAsAccount $RunAsAccount -FarmDns $FarmDns -FarmCertificateThumbprint $FarmCertificateThumbprint -EncryptionCertificateThumbprint $EncryptionCertificateThumbprint
     Add-SBHost -SBFarmDBConnectionString $SBFarmDBConnectionString -RunAsPassword $RunAsPassword -EnableFirewallRules $true
 }
+'@
 
+function GetTempFile($file_name) {
+  $path = $env:TEMP
+  if (!$path){
+    $path = '#{'c:\\windows\\Temp\\'}'
+  }
+  return Join-Path -Path $path -ChildPath $file_name
+}
+
+function SlurpStdout($out_file, $cur_line) {
+  if (Test-Path $out_file) {
+    get-content $out_file | select -skip $cur_line | ForEach {
+      $cur_line += 1
+      Write-Host "$_" 
+    }
+  }
+  return $cur_line
+}
+
+function SlurpStderr($error_out_file, $cur_line) {
+  if (Test-Path $error_out_file) {
+    get-content $error_out_file | select -skip $cur_line | ForEach {
+      $cur_line += 1
+      Write-Error "$_" 
+    }
+  }
+  return $cur_line
+}
+
+function RunAsScheduledTask($username, $password, $scriptFile) 
+{
+  $task_name = "WinRM_Elevated_Shell_Octopus"
+  $stdout_file = GetTempFile('WinRM_Elevated_Shell_stdout.log')
+  $stderr_file = GetTempFile('WinRM_Elevated_Shell_stderr.log')
+
+  if (Test-Path $stdout_file) {
+    Remove-Item $stdout_file | Out-Null
+  }
+
+  if (Test-Path $stderr_file) {
+    Remove-Item $stderr_file | Out-Null
+  }  
+
+  $task_xml = @'
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+    <Principals>
+        <Principal id="Author">
+        <UserId>{username}</UserId>
+        <LogonType>Password</LogonType>
+        <RunLevel>HighestAvailable</RunLevel>
+        </Principal>
+    </Principals>
+    <Settings>
+        <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+        <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+        <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+        <AllowHardTerminate>true</AllowHardTerminate>
+        <StartWhenAvailable>false</StartWhenAvailable>
+        <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+        <IdleSettings>
+        <StopOnIdleEnd>false</StopOnIdleEnd>
+        <RestartOnIdle>false</RestartOnIdle>
+        </IdleSettings>
+        <AllowStartOnDemand>true</AllowStartOnDemand>
+        <Enabled>true</Enabled>
+        <Hidden>false</Hidden>
+        <RunOnlyIfIdle>false</RunOnlyIfIdle>
+        <WakeToRun>false</WakeToRun>
+        <ExecutionTimeLimit>PT2H</ExecutionTimeLimit>
+        <Priority>4</Priority>
+    </Settings>
+    <Actions Context="Author">
+        <Exec>
+        <Command>cmd</Command>
+        <Arguments>{arguments}</Arguments>
+        </Exec>
+    </Actions>
+</Task>
+'@
+
+  $arguments = "/c powershell.exe -NonInteractive -File $script_file >$stdout_file 2>$stderr_file"
+
+  $task_xml = $task_xml.Replace("{arguments}", $arguments.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;').Replace('''', '&apos;'))
+  $task_xml = $task_xml.Replace("{username}", $username.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;').Replace('''', '&apos;'))
+  
+  $schedule = New-Object -ComObject "Schedule.Service"
+  $schedule.Connect()
+  $task = $schedule.NewTask($null)
+  $task.XmlText = $task_xml
+  
+  $folder = $schedule.GetFolder("#{'\\'}")
+  $folder.RegisterTaskDefinition($task_name, $task, 6, $username, $password, 1, $null) | Out-Null
+
+  $registered_task = $folder.GetTask("#{'\\'}$task_name")
+  $registered_task.Run($null) | Out-Null
+
+  $timeout = 10
+  $sec = 0
+  while ( (!($registered_task.state -eq 4)) -and ($sec -lt $timeout) ) {
+    Start-Sleep -s 1
+    $sec++
+  }
+
+  $stdout_cur_line = 0
+  $stderr_cur_line = 0
+  do {
+    Start-Sleep -m 100
+    $stdout_cur_line = SlurpStdout $stdout_file $stdout_cur_line
+  } while (!($registered_task.state -eq 3))
+  Start-Sleep -m 100
+  $exit_code = $registered_task.LastTaskResult
+  $stdout_cur_line = SlurpStdout $stdout_file $stdout_cur_line
+  try{
+    $stderr_cur_line = SlurpStderr $stderr_file $stderr_cur_line
+  } finally {
+    if (Test-Path $stdout_file) {
+      Remove-Item $stdout_file | Out-Null
+    }
+
+    if (Test-Path $stderr_file) {
+      Remove-Item $stderr_file | Out-Null
+    } 
+    
+    $folder.DeleteTask($task_name, 0)
+    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($schedule) | Out-Null
+  }
+
+  return $exit_code
+}
+
+$script_file = GetTempFile('WinRM_Elevated_Shell.ps1')
+
+if (Test-Path $script_file) {
+  Remove-Item $script_file | Out-Null
+}
+
+Set-Content -Path $script_file -Value $command | Out-Null
+try{
+  $username = '#{node['windowsservicebus']['service']['account']}'.Replace('.#{'\\'}', $env:computername+'#{'\\'}')
+  $password = '#{node['windowsservicebus']['service']['password']}'
+  $exitCode = RunAsScheduledTask -username $username -password $password -script_path $script_file
+  exit $exitCode
+} finally {
+  if (Test-Path $script_file) {
+      Remove-Item $script_file | Out-Null
+  }
+}
+	
 EOH1
     
     only_if <<-EOH2
@@ -109,7 +261,7 @@ try{$sbFarm = get-sbfarm}catch{$sbFarm = $null}
 
 if ($sbFarm){
     $localRunAsAccount = $sbFarm.RunAsAccount 
-    $localRunAsAccount = $localRunAsAccount -replace "#{'^\.\\\\'}", ""
+    $localRunAsAccount = $localRunAsAccount -replace "#{'^\\.\\\\'}", ""
     $localRunAsAccount = $localRunAsAccount -replace "#{'^$env:COMPUTERNAME\\\\'}", ""
     if ($localRunAsAccount -ne $RunAsAccount -or $sbFarm.SBFarmDBConnectionString -ne $SBFarmDBConnectionString -or $sbFarm.GatewayDBConnectionString -ne $GatewayDBConnectionString -or $sbFarm.FarmDNS -ne $FarmDns) {
         return $true
@@ -122,10 +274,15 @@ EOH2
     action :run
 end
 
+
 node['windowsservicebus']['instance']['SBMessageContainers'].each do |service_bus_message_container|
     powershell_script "New-SBMessageContainer #{service_bus_message_container['DatabaseName']}" do
         guard_interpreter :powershell_script
         code <<-EOH3
+
+$ErrorActionPreference='Stop'
+
+$command = @'
 $ErrorActionPreference='Stop'
 ipmo 'C:/Program Files/Service Bus/1.1/Microsoft.ServiceBus.Commands.dll'
 $DatabaseName = '#{service_bus_message_container['DatabaseName']}'
@@ -136,6 +293,155 @@ $SBMessageContainer = Get-SBMessageContainer | ?{$_.DatabaseName -eq $DatabaseNa
 
 if (!$SBMessageContainer) {
     New-SBMessageContainer -SBFarmDBConnectionString $SBFarmDBConnectionString -ContainerDBConnectionString $ContainerDBConnectionString -Verbose
+}
+'@
+
+function GetTempFile($file_name) {
+  $path = $env:TEMP
+  if (!$path){
+    $path = '#{'c:\\windows\\Temp\\'}'
+  }
+  return Join-Path -Path $path -ChildPath $file_name
+}
+
+function SlurpStdout($out_file, $cur_line) {
+  if (Test-Path $out_file) {
+    get-content $out_file | select -skip $cur_line | ForEach {
+      $cur_line += 1
+      Write-Host "$_" 
+    }
+  }
+  return $cur_line
+}
+
+function SlurpStderr($error_out_file, $cur_line) {
+  if (Test-Path $error_out_file) {
+    get-content $error_out_file | select -skip $cur_line | ForEach {
+      $cur_line += 1
+      Write-Error "$_" 
+    }
+  }
+  return $cur_line
+}
+
+function RunAsScheduledTask($username, $password, $scriptFile) 
+{
+  $task_name = "WinRM_Elevated_Shell_Octopus"
+  $stdout_file = GetTempFile('WinRM_Elevated_Shell_stdout.log')
+  $stderr_file = GetTempFile('WinRM_Elevated_Shell_stderr.log')
+
+  if (Test-Path $stdout_file) {
+    Remove-Item $stdout_file | Out-Null
+  }
+
+  if (Test-Path $stderr_file) {
+    Remove-Item $stderr_file | Out-Null
+  }  
+
+  $task_xml = @'
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+    <Principals>
+        <Principal id="Author">
+        <UserId>{username}</UserId>
+        <LogonType>Password</LogonType>
+        <RunLevel>HighestAvailable</RunLevel>
+        </Principal>
+    </Principals>
+    <Settings>
+        <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+        <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+        <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+        <AllowHardTerminate>true</AllowHardTerminate>
+        <StartWhenAvailable>false</StartWhenAvailable>
+        <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+        <IdleSettings>
+        <StopOnIdleEnd>false</StopOnIdleEnd>
+        <RestartOnIdle>false</RestartOnIdle>
+        </IdleSettings>
+        <AllowStartOnDemand>true</AllowStartOnDemand>
+        <Enabled>true</Enabled>
+        <Hidden>false</Hidden>
+        <RunOnlyIfIdle>false</RunOnlyIfIdle>
+        <WakeToRun>false</WakeToRun>
+        <ExecutionTimeLimit>PT2H</ExecutionTimeLimit>
+        <Priority>4</Priority>
+    </Settings>
+    <Actions Context="Author">
+        <Exec>
+        <Command>cmd</Command>
+        <Arguments>{arguments}</Arguments>
+        </Exec>
+    </Actions>
+</Task>
+'@
+
+  $arguments = "/c powershell.exe -NonInteractive -File $script_file >$stdout_file 2>$stderr_file"
+
+  $task_xml = $task_xml.Replace("{arguments}", $arguments.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;').Replace('''', '&apos;'))
+  $task_xml = $task_xml.Replace("{username}", $username.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;').Replace('''', '&apos;'))
+  
+  $schedule = New-Object -ComObject "Schedule.Service"
+  $schedule.Connect()
+  $task = $schedule.NewTask($null)
+  $task.XmlText = $task_xml
+  
+  $folder = $schedule.GetFolder("#{'\\'}")
+  $folder.RegisterTaskDefinition($task_name, $task, 6, $username, $password, 1, $null) | Out-Null
+
+  $registered_task = $folder.GetTask("#{'\\'}$task_name")
+  $registered_task.Run($null) | Out-Null
+
+  $timeout = 10
+  $sec = 0
+  while ( (!($registered_task.state -eq 4)) -and ($sec -lt $timeout) ) {
+    Start-Sleep -s 1
+    $sec++
+  }
+
+  $stdout_cur_line = 0
+  $stderr_cur_line = 0
+  do {
+    Start-Sleep -m 100
+    $stdout_cur_line = SlurpStdout $stdout_file $stdout_cur_line
+  } while (!($registered_task.state -eq 3))
+  Start-Sleep -m 100
+  $exit_code = $registered_task.LastTaskResult
+  $stdout_cur_line = SlurpStdout $stdout_file $stdout_cur_line
+  try{
+    $stderr_cur_line = SlurpStderr $stderr_file $stderr_cur_line
+  } finally {
+    if (Test-Path $stdout_file) {
+      Remove-Item $stdout_file | Out-Null
+    }
+
+    if (Test-Path $stderr_file) {
+      Remove-Item $stderr_file | Out-Null
+    } 
+    
+    $folder.DeleteTask($task_name, 0)
+    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($schedule) | Out-Null
+  }
+
+  return $exit_code
+}
+
+$script_file = GetTempFile('WinRM_Elevated_Shell.ps1')
+
+if (Test-Path $script_file) {
+  Remove-Item $script_file | Out-Null
+}
+
+Set-Content -Path $script_file -Value $command | Out-Null
+try{
+  $username = '#{node['windowsservicebus']['service']['account']}'.Replace('.#{'\\'}', $env:computername+'#{'\\'}')
+  $password = '#{node['windowsservicebus']['service']['password']}'
+  $exitCode = RunAsScheduledTask -username $username -password $password -script_path $script_file
+  exit $exitCode
+} finally {
+  if (Test-Path $script_file) {
+      Remove-Item $script_file | Out-Null
+  }
 }
 EOH3
         action :run
@@ -182,7 +488,7 @@ if ($SBNamespace) {
 } else {
     Try
     {
-        $localRunAsAccount = $RunAsAccount -replace "#{'^\.\\\\'}", ""
+        $localRunAsAccount = $RunAsAccount -replace "#{'^\\.\\\\'}", ""
         $localRunAsAccount = $localRunAsAccount -replace "#{'^$env:COMPUTERNAME\\\\'}", ""
     
         New-SBNamespace -Name $Namespace -AddressingScheme 'Path' -ManageUsers @("Administrators", $localRunAsAccount) -Verbose 
