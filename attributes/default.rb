@@ -22,6 +22,7 @@
 default['windowsservicebus']['service']['account'] = '.\ServiceBus' # e.g. ServiceBus. This account is used to access the database server, so ensure that database permission have been configured. This account is used to run service, so ensure that it has the correct permissions on each node. If using multiple nodes, active directory is required.
 default['windowsservicebus']['service']['password'] = 'P@ssw0rd' # e.g. P@ssw0rd. This is the password to use if creating a windows account locally to use.
 default['windowsservicebus']['service']['group'] = 'Administrators'
+default['windowsservicebus']['installer']['ServiceBus_1_1_NETFramework46_Update'] = 'https://download.microsoft.com/download/F/7/C/F7C0E11E-1210-41B1-8C7A-3E084ADF2053/AppServer-KB3086798-x64-DE.exe'
 
 username = node['windowsservicebus']['service']['account']
 domain = ""
