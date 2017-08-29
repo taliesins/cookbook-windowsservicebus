@@ -86,22 +86,22 @@ default['windowsservicebus']['certificate']['EncryptionCertificate']['user_store
 default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_cert_path'] = node['windowsservicebus']['certificate']['CaCertificate']['cert_path']
 default['windowsservicebus']['certificate']['EncryptionCertificate']['ca_key_path'] = node['windowsservicebus']['certificate']['CaCertificate']['key_path']
 
-dsn = "Data Source=#{node['windowsservicebus']['database']['host']};Integrated Security=True;Encrypt=False"
-default['windowsservicebus']['instance']['connectionstring']['SbManagementDB'] = "#{dsn};Initial Catalog=SbManagementDB"
-default['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase'] = "#{dsn};Initial Catalog=SbGatewayDatabase"
+#Note: Service Bus connection string must be exact match of: Data Source=#{Host};Initial Catalog=#{DatabaseName};Integrated Security=True;Encrypt=False
+default['windowsservicebus']['instance']['connectionstring']['SbManagementDB'] = "Data Source=#{node['windowsservicebus']['database']['host']};Initial Catalog=SbManagementDB;Integrated Security=True;Encrypt=False"
+default['windowsservicebus']['instance']['connectionstring']['SbGatewayDatabase'] = "Data Source=#{node['windowsservicebus']['database']['host']};Initial Catalog=SbGatewayDatabase;Integrated Security=True;Encrypt=False"
 
 default['windowsservicebus']['instance']['SBMessageContainers'] = [
 	{
 		:DatabaseName=>"SBMessageContainer01",
-		:ConnectionString=>"#{dsn};Initial Catalog=SBMessageContainer01"
+		:ConnectionString=>"Data Source=#{node['windowsservicebus']['database']['host']};Initial Catalog=SBMessageContainer01;Integrated Security=True;Encrypt=False"
 	}, 
 	{
 		:DatabaseName=>"SBMessageContainer02",
-		:ConnectionString=>"#{dsn};Initial Catalog=SBMessageContainer02"
+		:ConnectionString=>"Data Source=#{node['windowsservicebus']['database']['host']};Initial Catalog=SBMessageContainer02;Integrated Security=True;Encrypt=False"
 	}, 
 	{
 		:DatabaseName=>"SBMessageContainer03",
-		:ConnectionString=>"#{dsn};Initial Catalog=SBMessageContainer03"
+		:ConnectionString=>"Data Source=#{node['windowsservicebus']['database']['host']};Initial Catalog=SBMessageContainer03;Integrated Security=True;Encrypt=False"
 	}
 ]
 
